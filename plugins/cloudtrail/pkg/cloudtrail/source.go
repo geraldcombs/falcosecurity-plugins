@@ -41,6 +41,7 @@ import (
 
 	"github.com/falcosecurity/plugin-sdk-go/pkg/sdk"
 	"github.com/falcosecurity/plugin-sdk-go/pkg/sdk/plugins/source"
+	awsSessionExtras "github.com/falcosecurity/plugins/shared/go/aws/session"
 )
 
 type OpenMode int
@@ -139,10 +140,8 @@ func openLocal(pCtx *Plugin, oCtx *PluginInstance, params string) error {
 	return nil
 }
 
-func initS3(oCtx *PluginInstance) {
-	oCtx.s3.awsSess = session.Must(session.NewSessionWithOptions(session.Options{
-		SharedConfigState: session.SharedConfigEnable,
-	}))
+func initS3(pCtx *Plugin, oCtx *PluginInstance) {
+	oCtx.s3.awsSess = awsSessionExtras.CreateSession(pCtx.Config.Region, pCtx.Config.Profile)
 
 	oCtx.s3.awsSvc = s3.New(oCtx.s3.awsSess)
 
@@ -166,7 +165,7 @@ func openS3(pCtx *Plugin, oCtx *PluginInstance, input string) error {
 		prefix = input[slashindex+1:]
 	}
 
-	initS3(oCtx)
+	initS3(pCtx, oCtx)
 
 	// Fetch the list of keys
 
@@ -271,7 +270,7 @@ func getMoreSQSFiles(pCtx *Plugin, oCtx *PluginInstance) error {
 
 				// only init s3 once
 				if !s3Init {
-					initS3(oCtx)
+					initS3(pCtx, oCtx)
 					s3Init = true
 				}
 			}
@@ -299,7 +298,7 @@ func getMoreSQSFiles(pCtx *Plugin, oCtx *PluginInstance) error {
 	// contain new cloudtrail files.
 	oCtx.s3.bucket = notification.Bucket
 
-	initS3(oCtx)
+	initS3(pCtx, oCtx)
 
 	for _, key := range notification.Keys {
 
