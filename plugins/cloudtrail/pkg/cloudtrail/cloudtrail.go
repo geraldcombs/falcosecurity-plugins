@@ -30,6 +30,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"math"
+	"reflect"
 
 	"github.com/alecthomas/jsonschema"
 	"github.com/falcosecurity/plugin-sdk-go/pkg/sdk"
@@ -75,7 +76,11 @@ func (p *Plugin) InitSchema() *sdk.SchemaInfo {
 		RequiredFromJSONSchemaTags: true, // all properties are optional by default
 		AllowAdditionalProperties:  true, // unrecognized properties don't cause a parsing failures
 	}
-	if schema, err := reflector.Reflect(&PluginConfig{}).MarshalJSON(); err == nil {
+	reflector.AdditionalFields = func(r reflect.Type) []reflect.StructField {
+		return PluginConfigFields()
+	}
+	type DummyConfig struct {}
+	if schema, err := reflector.Reflect(&DummyConfig{}).MarshalJSON(); err == nil {
 		return &sdk.SchemaInfo{
 			Schema: string(schema),
 		}
