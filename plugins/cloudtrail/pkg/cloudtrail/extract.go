@@ -73,6 +73,52 @@ var supportedFields = []sdk.FieldEntry{
 	{Type: "string", Name: "ec2.name", Display: "Instance Name", Desc: "the name of the ec2 instances, typically stored in the instance tags."},
 }
 
+// XXX This adds a lot of duplicate path strings. Should we
+// define a bunch of consts instead?
+var fieldLocators = map[string]string {
+	"ct.id": "eventID",
+	"ct.error": "errorCode",
+	"ct.time": "eventTime",
+	"ct.src": "eventSource",
+	"ct.shortsrc": "eventSource",
+	"ct.name": "eventName",
+	"ct.user": "generated",
+	"ct.user.accountid": "userIdentity.accountId",
+	"ct.user.identitytype": "userIdentity.type",
+	"ct.user.principalid": "userIdentity.principalId",
+	"ct.user.arn": "userIdentity.arn",
+	"ct.region": "awsRegion",
+	"ct.response.subnetid": "responseElements.subnetId",
+	"ct.response.reservationid": "responseElements.reservationId",
+	"ct.request.availabilityzone": "requestParameters.availabilityZone",
+	"ct.request.cluster": "requestParameters.cluster",
+	"ct.request.functionname": "requestParameters.functionName",
+	"ct.request.groupname": "requestParameters.groupName",
+	"ct.request.host": "requestParameters.Host",
+	"ct.request.name": "requestParameters.name",
+	"ct.request.policy": "requestParameters.policy",
+	"ct.request.serialnumber": "requestParameters.serialNumber",
+	"ct.request.servicename": "requestParameters.serviceName",
+	"ct.request.subnetid": "requestParameters.subnetId",
+	"ct.request.taskdefinition": "requestParameters.taskDefinition",
+	"ct.request.username": "requestParameters.userName",
+	"ct.srcip": "sourceIPAddress",
+	"ct.useragent": "userAgent",
+	"ct.info": "generated",
+	"ct.managementevent": "managementEvent",
+	"ct.readonly": "readOnly", // incomplete
+	"s3.bucket": "requestParameters.bucketName",
+	"s3.key": "requestParameters.key",
+	"s3.uri": "generated",
+	"s3.bytes": "generated",
+	"s3.bytes.in": "additionalEventData.bytesTransferredIn",
+	"s3.bytes.out": "additionalEventData.bytesTransferredOut",
+	"s3.cnt.get": "generated",
+	"s3.cnt.put": "generated",
+	"s3.cnt.other": "generated",
+	"ec2.name": "generated",
+}
+
 func getUser(jdata *fastjson.Value) (bool, string) {
 	jutype := jdata.GetStringBytes("userIdentity", "type")
 

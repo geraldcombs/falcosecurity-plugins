@@ -237,13 +237,23 @@ func (p *Plugin) Extract(req sdk.ExtractRequest, evt sdk.EventReader) error {
 	// Extract the field value
 	var present bool
 	var value interface{}
-	if req.FieldType() == sdk.FieldTypeUint64 {
-		present, value = getfieldU64(p.jdata, req.Field())
+	if (req.ArgPresent() == true && req.ArgKey() == "fieldlocator" && req.FieldType() == sdk.FieldTypeCharBuf) {
+		path, ok := fieldLocators[req.Field()]
+		if (ok) {
+			if (path != "generated") {
+				path = "jsonpath:$." + path
+			}
+			req.SetValue(path)
+		}
 	} else {
-		present, value = getfieldStr(p.jdata, req.Field())
-	}
-	if present {
-		req.SetValue(value)
+		if req.FieldType() == sdk.FieldTypeUint64 {
+			present, value = getfieldU64(p.jdata, req.Field())
+		} else {
+			present, value = getfieldStr(p.jdata, req.Field())
+		}
+		if present {
+			req.SetValue(value)
+		}
 	}
 
 	return nil
