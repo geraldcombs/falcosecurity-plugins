@@ -17,6 +17,8 @@ require (
 	github.com/valyala/fastjson v1.6.4
 )
 
+replace github.com/falcosecurity/plugin-sdk-go => /Users/gerald/Development/falcosecurity-plugin-sdk-go
+
 require (
 	github.com/aws/aws-sdk-go-v2/aws/protocol/eventstream v1.6.10 // indirect
 	github.com/aws/aws-sdk-go-v2/credentials v1.17.60 // indirect
@@ -35,6 +37,9 @@ require (
 	github.com/bahlo/generic-list-go v0.2.0 // indirect
 	github.com/buger/jsonparser v1.1.1 // indirect
 	github.com/mailru/easyjson v0.9.0 // indirect
+	github.com/tidwall/gjson v1.18.0 // indirect
+	github.com/tidwall/match v1.1.1 // indirect
+	github.com/tidwall/pretty v1.2.0 // indirect
 	github.com/wk8/go-ordered-map/v2 v2.1.8 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )

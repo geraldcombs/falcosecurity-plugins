@@ -31,6 +31,7 @@ import (
 	"fmt"
 	"io"
 	"math"
+	"strings"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/falcosecurity/plugin-sdk-go/pkg/sdk"
@@ -39,6 +40,7 @@ import (
 	"github.com/falcosecurity/plugin-sdk-go/pkg/sdk/symbols/extract"
 	_ "github.com/falcosecurity/plugin-sdk-go/pkg/sdk/symbols/progress"
 	"github.com/invopop/jsonschema"
+	"github.com/tidwall/gjson"
 	"github.com/valyala/fastjson"
 )
 
@@ -212,7 +214,7 @@ func (p *Plugin) Fields() []sdk.FieldEntry {
 	return supportedFields
 }
 
-func (p *Plugin) Extract(req sdk.ExtractRequest, evt sdk.EventReader) error {
+func (p *Plugin) extractField(req sdk.ExtractRequest, evt sdk.EventReader) error {
 	// Decode the json, but only if we haven't done it yet for this event
 	if evt.EventNum() != p.jdataEvtnum {
 		// Read the event data
@@ -248,4 +250,57 @@ func (p *Plugin) Extract(req sdk.ExtractRequest, evt sdk.EventReader) error {
 	}
 
 	return nil
+}
+
+func (p *Plugin) extractLocation(req sdk.ExtractRequest, evt sdk.EventReader) error {
+	if (req.FieldType() != sdk.FieldTypeCharBuf) {
+		return fmt.Errorf("<fieldlocator: Field type must be FieldTypeCharBuf>")
+	}
+
+	// Read the event data
+	data, err := io.ReadAll(evt.Reader())
+	if err != nil {
+		return err
+	}
+
+	// Maybe temp--remove trailing null bytes from string
+	data = bytes.Trim(data, "\x00")
+
+	// For this plugin, events are always strings
+	evtStr := string(data)
+
+	path, ok := fieldLocators[req.Field()]
+	location := "unknown"
+	if (ok) {
+		if (path == "_GENERATED_") {
+			location = "generated"
+		} else {
+			// XXX We should probably call gjson.GetMany and cache its output like we do in extractField above.
+			result := gjson.Get(evtStr, path)
+			// result.Index gives us the starting index of the field value.
+			// Use that to find the start of the field name and the end of the field value.
+			paths := strings.Split(path, ".")
+			lastKey := "\"" + paths[len(paths) - 1] + "\":"
+			start := result.Index
+			for idx := start - len(lastKey); idx >= 0; idx-- {
+				if evtStr[idx:idx+len(lastKey)] == lastKey {
+					start = idx
+					break
+				}
+			}
+			location = fmt.Sprintf("slice:%v:%v", start, result.Index + len(result.Raw))
+		}
+		req.SetValue(location)
+	}
+
+	return nil
+}
+
+func (p *Plugin) Extract(req sdk.ExtractRequest, evt sdk.EventReader) error {
+
+	if (req.ArgPresent() && req.ArgKey() == "fieldlocator") {
+		return p.extractLocation(req, evt)
+	}
+
+	return p.extractField(req, evt)
 }
